@@ -1,0 +1,6 @@
+{
+  "messages.screen.title": "Messages",
+  "messages.screen.empty": "No messages",
+  "messages.screen.loading": "Loading messages...",
+  "messages.screen.error": "Failed to load messages"
+}
