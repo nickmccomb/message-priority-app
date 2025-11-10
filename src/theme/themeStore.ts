@@ -25,10 +25,10 @@ export const useThemeStore = create<ThemeStore>()(
           return value ?? null;
         },
         setItem: (name, value) => {
-          storage.set(name, value);
+          storage.setString(name, value);
         },
         removeItem: (name) => {
-          storage.delete(name);
+          storage.removeItem(name);
         },
       })),
     }
