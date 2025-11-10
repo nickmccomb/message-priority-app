@@ -1,29 +1,42 @@
-import React, { useState } from "react";
+import { ActivityIndicator, View } from "react-native";
+import React, { useMemo } from "react";
+import { useMarkAsRead, useMessages } from "../../hooks/useMessages";
 
 import type { Message } from "../../types/message";
 import { MessageList } from "../../components/organisms/MessageList";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../../components/atoms/Text";
-import { View } from "react-native";
-import { mockMessages } from "../../utils/mockData";
+import { sortMessagesByPriority } from "../../utils/priority";
+import { useMessageStore } from "../../stores/messageStore";
 import { useTranslation } from "react-i18next";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 export function Messages() {
   const { t } = useTranslation();
-  const [messages] = useState<Message[]>(mockMessages);
-  const [refreshing, setRefreshing] = useState(false);
+  const { isLoading, isError, refetch, isRefetching } = useMessages();
+  const { messages } = useMessageStore();
+  const markAsReadMutation = useMarkAsRead();
+
+  // Connect to WebSocket for real-time updates
+  useWebSocket();
+
+  // Use Zustand store as source of truth (includes WebSocket updates)
+  // React Query data is used to initially populate the store
+  const displayMessages = useMemo(() => {
+    // Zustand store is the single source of truth - it gets updated by both API and WebSocket
+    return sortMessagesByPriority(messages);
+  }, [messages]);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    // TODO: Implement actual refresh logic with React Query
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    await refetch();
   };
 
   const handleMessagePress = (message: Message) => {
-    // TODO: Navigate to message detail or mark as read
-    console.log("Message pressed:", message.id);
+    // Mark as read if unread
+    if (!message.isRead) {
+      markAsReadMutation.mutate(message.id);
+    }
+    // TODO: Navigate to message detail
   };
 
   return (
@@ -31,7 +44,20 @@ export function Messages() {
       <View className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
         <Text.H1>{t("messages.screen.title")}</Text.H1>
       </View>
-      {messages.length === 0 ? (
+      {isLoading && messages.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" />
+          <Text.Body className="mt-4 text-gray-500 dark:text-gray-400">
+            {t("messages.screen.loading")}
+          </Text.Body>
+        </View>
+      ) : isError ? (
+        <View className="flex-1 items-center justify-center">
+          <Text.Body className="text-gray-500 dark:text-gray-400">
+            {t("messages.screen.error")}
+          </Text.Body>
+        </View>
+      ) : displayMessages.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Text.Body className="text-gray-500 dark:text-gray-400">
             {t("messages.screen.empty")}
@@ -39,10 +65,10 @@ export function Messages() {
         </View>
       ) : (
         <MessageList
-          messages={messages}
+          messages={displayMessages}
           onMessagePress={handleMessagePress}
           onRefresh={handleRefresh}
-          refreshing={refreshing}
+          refreshing={isRefetching}
         />
       )}
     </SafeAreaView>
