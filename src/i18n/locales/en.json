@@ -16,5 +16,14 @@
   "messages.filter.mode.priority": "Priority Only",
   "messages.filter.mode.priority.description": "Sorted by importance score",
   "messages.filter.mode.time": "Time Only",
-  "messages.filter.mode.time.description": "Newest messages first"
+  "messages.filter.mode.time.description": "Newest messages first",
+  "messages.detail.notFound": "Message not found",
+  "messages.detail.priority": "Priority",
+  "messages.detail.subject": "Subject",
+  "messages.detail.content": "Content",
+  "messages.detail.messageId": "Message ID",
+  "messages.detail.source": "Source",
+  "messages.detail.status": "Status",
+  "messages.detail.read": "Read",
+  "messages.detail.unread": "Unread"
 }

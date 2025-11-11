@@ -1,8 +1,12 @@
-import { LegendList, type LegendListRenderItemProps } from "@legendapp/list";
-import React, { useCallback, useMemo } from "react";
+import {
+  LegendList,
+  type LegendListRef,
+  type LegendListRenderItemProps,
+} from "@legendapp/list";
+import React, { forwardRef } from "react";
 
 export interface ListViewProps<ItemT> {
-  data: ReadonlyArray<ItemT>;
+  data: readonly ItemT[];
   renderItem: (props: LegendListRenderItemProps<ItemT>) => React.ReactElement;
   keyExtractor: (item: ItemT, index: number) => string;
   estimatedItemSize?: number;
@@ -15,48 +19,35 @@ export interface ListViewProps<ItemT> {
  * Generic, high-performance list view component
  * Wraps LegendList with optimized defaults for smooth scrolling
  */
-export function ListView<ItemT>({
-  data,
-  renderItem,
-  keyExtractor,
-  estimatedItemSize = 100,
-  onRefresh,
-  refreshing = false,
-  className,
-}: ListViewProps<ItemT>) {
-  // Memoize key extractor function
-  const memoizedKeyExtractor = useCallback(
-    (item: ItemT, index: number) => keyExtractor(item, index),
-    [keyExtractor]
-  );
-
-  // Memoize render item function
-  const memoizedRenderItem = useCallback(
-    (props: LegendListRenderItemProps<ItemT>) => renderItem(props),
-    [renderItem]
-  );
-
-  // Memoize estimated item size
-  const memoizedEstimatedItemSize = useMemo(
-    () => estimatedItemSize,
-    [estimatedItemSize]
-  );
-
-  return (
-    <LegendList
-      data={data}
-      renderItem={memoizedRenderItem}
-      keyExtractor={memoizedKeyExtractor}
-      estimatedItemSize={memoizedEstimatedItemSize}
-      onRefresh={onRefresh}
-      refreshing={refreshing}
-      className={className}
-      recycleItems
-      enableAverages
-      drawDistance={500}
-      maintainVisibleContentPosition
-      initialContainerPoolRatio={0.5}
-    />
-  );
-}
-
+export const ListView = forwardRef<LegendListRef, ListViewProps<any>>(
+  function ListView(
+    {
+      data,
+      renderItem,
+      keyExtractor,
+      estimatedItemSize = 100,
+      onRefresh,
+      refreshing = false,
+      className,
+    },
+    ref
+  ) {
+    return (
+      <LegendList
+        ref={ref}
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        estimatedItemSize={estimatedItemSize}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+        className={className}
+        recycleItems
+        enableAverages
+        maintainVisibleContentPosition
+      />
+    );
+  }
+) as <ItemT>(
+  props: ListViewProps<ItemT> & { ref?: React.Ref<LegendListRef> }
+) => React.ReactElement;

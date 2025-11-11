@@ -72,6 +72,13 @@ export function MessageHeader({
             </Text.Small>
           </View>
         )}
+        {isRead && (
+          <View className="bg-green-100 dark:bg-green-900 px-2 py-0.5 rounded-full">
+            <Text.Small className="font-semibold text-green-700 dark:text-green-300">
+              ✓
+            </Text.Small>
+          </View>
+        )}
         <Text.Caption className="text-gray-500 dark:text-gray-400">
           {formatTimestamp(timestamp)}
         </Text.Caption>
