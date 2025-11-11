@@ -1,12 +1,11 @@
-import React, {
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
-import { useMessages } from "../../hooks/useMessages";
+import {
+  useMessagesError,
+  useMessagesIsRefetching,
+  useMessagesLoading,
+  useMessagesRefetch,
+} from "../../hooks/useMessages";
 
 import type { LegendListRef, LegendListRenderItemProps } from "@legendapp/list";
 import { useNavigation, useRouter } from "expo-router";
@@ -16,8 +15,8 @@ import { ListView } from "../../components/atoms/ListView";
 import { Text } from "../../components/atoms/Text";
 import { MessageItem } from "../../components/organisms/MessageItem";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { useFilterStore } from "../../stores/filterStore";
 import { useMessageStore } from "../../stores/messageStore";
-import type { FilterMode } from "../../types/filter";
 import type { Message as MessageType } from "../../types/message";
 import { sortMessages } from "../../utils/priority";
 import { FilterBottomSheet } from "./components/FilterBottomSheet";
@@ -28,11 +27,14 @@ export function Messages() {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const router = useRouter();
-  const { isLoading, isError, refetch, isRefetching } = useMessages();
+  const isLoading = useMessagesLoading();
+  const isError = useMessagesError();
+  const refetch = useMessagesRefetch();
+  const isRefetching = useMessagesIsRefetching();
   const { messages, clearMessages } = useMessageStore();
+  const { hideRead, filterMode } = useFilterStore();
   const filterBottomSheetRef = useRef<BottomSheetRef>(null);
   const listViewRef = useRef<LegendListRef>(null);
-  const [filterMode, setFilterMode] = useState<FilterMode>("both");
 
   // Connect to WebSocket for real-time updates
   useWebSocket();
@@ -41,15 +43,18 @@ export function Messages() {
   // React Query data is used to initially populate the store
   const displayMessages = useMemo(() => {
     // Zustand store is the single source of truth - it gets updated by both API and WebSocket
-    return sortMessages(messages, filterMode);
-  }, [messages, filterMode]);
+    let filtered = messages;
+
+    // Filter out read messages if hideRead is enabled
+    if (hideRead) {
+      filtered = filtered.filter((msg) => !msg.isRead);
+    }
+
+    return sortMessages(filtered, filterMode);
+  }, [messages, filterMode, hideRead]);
 
   const handleOpenFilter = useCallback(() => {
     filterBottomSheetRef.current?.expand();
-  }, []);
-
-  const handleFilterModeChange = useCallback((mode: FilterMode) => {
-    setFilterMode(mode);
   }, []);
 
   const handleClear = useCallback(() => {
@@ -122,11 +127,6 @@ export function Messages() {
     [handleMessagePress]
   );
 
-  const estimatedItemSize = useMemo(() => {
-    // Average message item height: ~120px (header + preview + badge + padding)
-    return 120;
-  }, []);
-
   return (
     <>
       <View className="flex-1 bg-white dark:bg-gray-900">
@@ -155,17 +155,13 @@ export function Messages() {
             data={displayMessages}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
-            estimatedItemSize={estimatedItemSize}
+            estimatedItemSize={120}
             onRefresh={handleRefresh}
             refreshing={isRefetching}
           />
         )}
       </View>
-      <FilterBottomSheet
-        bottomSheetRef={filterBottomSheetRef}
-        currentMode={filterMode}
-        onModeChange={handleFilterModeChange}
-      />
+      <FilterBottomSheet bottomSheetRef={filterBottomSheetRef} />
     </>
   );
 }

@@ -1,8 +1,6 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { MMKVLoader } from 'react-native-mmkv-storage';
-
-const storage = new MMKVLoader().withInstanceID('theme-storage').initialize();
+import { persist } from 'zustand/middleware';
+import { createMMKVStorage } from '../stores/mmkvStorage';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -19,18 +17,7 @@ export const useThemeStore = create<ThemeStore>()(
     }),
     {
       name: 'theme-storage',
-      storage: createJSONStorage(() => ({
-        getItem: (name) => {
-          const value = storage.getString(name);
-          return value ?? null;
-        },
-        setItem: (name, value) => {
-          storage.setString(name, value);
-        },
-        removeItem: (name) => {
-          storage.removeItem(name);
-        },
-      })),
+      storage: createMMKVStorage('theme-storage'),
     }
   )
 );

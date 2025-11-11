@@ -1,9 +1,7 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { MMKVLoader } from 'react-native-mmkv-storage';
-import type { Message } from '../types/message';
-
-const storage = new MMKVLoader().withInstanceID('message-storage').initialize();
+import type { Message } from "../types/message";
+import { create } from "zustand";
+import { createMMKVStorage } from "./mmkvStorage";
+import { persist } from "zustand/middleware";
 
 interface MessageStore {
   messages: Message[];
@@ -50,20 +48,8 @@ export const useMessageStore = create<MessageStore>()(
       clearMessages: () => set({ messages: [] }),
     }),
     {
-      name: 'message-storage',
-      storage: createJSONStorage(() => ({
-        getItem: (name) => {
-          const value = storage.getString(name);
-          return value ?? null;
-        },
-        setItem: (name, value) => {
-          storage.setString(name, value);
-        },
-        removeItem: (name) => {
-          storage.removeItem(name);
-        },
-      })),
+      name: "message-storage",
+      storage: createMMKVStorage("message-storage"),
     }
   )
 );
-

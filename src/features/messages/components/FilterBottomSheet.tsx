@@ -1,29 +1,39 @@
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, View } from "react-native";
+import { Pressable, Switch, View } from "react-native";
 
+import {
+  BottomSheet,
+  type BottomSheetRef,
+} from "../../../components/atoms/BottomSheet";
+import { Text } from "../../../components/atoms/Text";
+import { useFilterStore } from "../../../stores/filterStore";
 import type { FilterMode } from "../../../types/filter";
 import { cn } from "../../../utils/cn";
-import { BottomSheet, type BottomSheetRef } from "../../../components/atoms/BottomSheet";
-import { Text } from "../../../components/atoms/Text";
 
 interface FilterBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheetRef | null>;
-  currentMode: FilterMode;
-  onModeChange: (mode: FilterMode) => void;
 }
 
-export function FilterBottomSheet({
-  bottomSheetRef,
-  currentMode,
-  onModeChange,
-}: FilterBottomSheetProps) {
+export function FilterBottomSheet({ bottomSheetRef }: FilterBottomSheetProps) {
   const { t } = useTranslation();
+  const { filterMode, hideRead, setFilterMode, setHideRead } = useFilterStore();
   const snapPoints = useMemo(() => ["40%"], []);
 
-  const handleClose = useCallback(() => {
-    bottomSheetRef.current?.close();
-  }, [bottomSheetRef]);
+  const handleModeChange = useCallback(
+    (mode: FilterMode) => {
+      setFilterMode(mode);
+      bottomSheetRef.current?.close();
+    },
+    [setFilterMode, bottomSheetRef]
+  );
+
+  const handleHideReadChange = useCallback(
+    (value: boolean) => {
+      setHideRead(value);
+    },
+    [setHideRead]
+  );
 
   const filterOptions: {
     mode: FilterMode;
@@ -52,7 +62,7 @@ export function FilterBottomSheet({
       ref={bottomSheetRef}
       index={-1}
       snapPoints={snapPoints}
-      className="px-4 pb-4"
+      className="px-4 pb-12"
     >
       <BottomSheet.Header
         title={t("messages.filter.title")}
@@ -61,14 +71,11 @@ export function FilterBottomSheet({
 
       <BottomSheet.Body className="gap-2">
         {filterOptions.map((option) => {
-          const isSelected = currentMode === option.mode;
+          const isSelected = filterMode === option.mode;
           return (
             <Pressable
               key={option.mode}
-              onPress={() => {
-                onModeChange(option.mode);
-                handleClose();
-              }}
+              onPress={() => handleModeChange(option.mode)}
               className={cn(
                 "p-4 rounded-lg border-2",
                 isSelected
@@ -105,8 +112,34 @@ export function FilterBottomSheet({
             </Pressable>
           );
         })}
+
+        {/* Hide Read Messages Toggle */}
+        <View className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <Pressable
+            onPress={() => handleHideReadChange(!hideRead)}
+            className="flex-row items-center justify-between p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+          >
+            <View className="flex-1 mr-4">
+              <Text.Body className="font-semibold text-gray-900 dark:text-white mb-1">
+                {t("messages.filter.hideRead")}
+              </Text.Body>
+              <Text.Caption className="text-gray-600 dark:text-gray-400">
+                {t("messages.filter.hideRead.description")}
+              </Text.Caption>
+            </View>
+            <Switch
+              value={hideRead}
+              onValueChange={handleHideReadChange}
+              trackColor={{
+                false: "#d1d5db",
+                true: "#3b82f6",
+              }}
+              thumbColor="#ffffff"
+              ios_backgroundColor="#d1d5db"
+            />
+          </Pressable>
+        </View>
       </BottomSheet.Body>
     </BottomSheet>
   );
 }
-

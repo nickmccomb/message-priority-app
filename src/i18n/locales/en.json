@@ -17,6 +17,8 @@
   "messages.filter.mode.priority.description": "Sorted by importance score",
   "messages.filter.mode.time": "Time Only",
   "messages.filter.mode.time.description": "Newest messages first",
+  "messages.filter.hideRead": "Hide Read Messages",
+  "messages.filter.hideRead.description": "Only show unread messages",
   "messages.detail.notFound": "Message not found",
   "messages.detail.priority": "Priority",
   "messages.detail.subject": "Subject",
