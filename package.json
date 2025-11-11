@@ -6,6 +6,9 @@
     "start": "bunx expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "lint": "bunx expo lint",
+    "test": "bun test",
+    "test:watch": "bun --watch test",
+    "test:coverage": "bun test --coverage",
     "prebuild": "bunx expo prebuild",
     "prebuild:clean": "bunx expo prebuild --clean",
     "ios": "bunx expo run:ios",
@@ -49,6 +52,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^13.3.3",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
