@@ -38,6 +38,7 @@ export function MessageItem({ message, onPress, className }: MessageItemProps) {
           timestamp={message.timestamp}
           senderVIP={message.senderVIP}
           isRead={message.isRead}
+          priority={message.priority}
         />
         <MessagePreview
           subject={message.subject}

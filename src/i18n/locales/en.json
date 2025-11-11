@@ -2,5 +2,10 @@
   "messages.screen.title": "Messages",
   "messages.screen.empty": "No messages",
   "messages.screen.loading": "Loading messages...",
-  "messages.screen.error": "Failed to load messages"
+  "messages.screen.error": "Failed to load messages",
+  "messages.screen.clear": "Clear",
+  "messages.screen.clearConfirm.title": "Clear All Messages",
+  "messages.screen.clearConfirm.message": "Are you sure you want to clear all messages? This action cannot be undone.",
+  "messages.screen.clearConfirm.confirm": "Clear",
+  "messages.screen.clearConfirm.cancel": "Cancel"
 }

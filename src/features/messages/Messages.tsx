@@ -1,20 +1,21 @@
-import { ActivityIndicator, View } from "react-native";
-import React, { useMemo } from "react";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import React, { useCallback, useLayoutEffect, useMemo } from "react";
 import { useMarkAsRead, useMessages } from "../../hooks/useMessages";
 
 import type { Message } from "../../types/message";
 import { MessageList } from "../../components/organisms/MessageList";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../../components/atoms/Text";
 import { sortMessagesByPriority } from "../../utils/priority";
 import { useMessageStore } from "../../stores/messageStore";
+import { useNavigation } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useWebSocket } from "../../hooks/useWebSocket";
 
 export function Messages() {
   const { t } = useTranslation();
+  const navigation = useNavigation();
   const { isLoading, isError, refetch, isRefetching } = useMessages();
-  const { messages } = useMessageStore();
+  const { messages, clearMessages } = useMessageStore();
   const markAsReadMutation = useMarkAsRead();
 
   // Connect to WebSocket for real-time updates
@@ -26,6 +27,49 @@ export function Messages() {
     // Zustand store is the single source of truth - it gets updated by both API and WebSocket
     return sortMessagesByPriority(messages);
   }, [messages]);
+
+  const handleClear = useCallback(() => {
+    Alert.alert(
+      t("messages.screen.clearConfirm.title"),
+      t("messages.screen.clearConfirm.message"),
+      [
+        {
+          text: t("messages.screen.clearConfirm.cancel"),
+          style: "cancel",
+        },
+        {
+          text: t("messages.screen.clearConfirm.confirm"),
+          style: "destructive",
+          onPress: () => clearMessages(),
+        },
+      ]
+    );
+  }, [clearMessages, t]);
+
+  // Configure native header with title, message count on left, and clear button on right
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t("messages.screen.title"),
+      headerLeft: () => (
+        <View className="pl-4">
+          <Text.Body className="text-gray-600 dark:text-gray-400">
+            {displayMessages.length}
+          </Text.Body>
+        </View>
+      ),
+      headerRight: () => (
+        <Pressable
+          onPress={handleClear}
+          className="pr-4"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text.Body className="text-blue-600 dark:text-blue-400">
+            {t("messages.screen.clear")}
+          </Text.Body>
+        </Pressable>
+      ),
+    });
+  }, [navigation, t, displayMessages.length, handleClear]);
 
   const handleRefresh = async () => {
     await refetch();
@@ -40,10 +84,7 @@ export function Messages() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900">
-      <View className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-        <Text.H1>{t("messages.screen.title")}</Text.H1>
-      </View>
+    <View className="flex-1 bg-white dark:bg-gray-900">
       {isLoading && messages.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" />
@@ -71,6 +112,6 @@ export function Messages() {
           refreshing={isRefetching}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }

@@ -42,7 +42,9 @@ export function Badge({
       {...props}
     >
       {typeof children === 'string' ? (
-        <Text.Small className="font-medium">{children}</Text.Small>
+        <Text.Small className="font-medium text-gray-700 dark:text-gray-300">
+          {children}
+        </Text.Small>
       ) : (
         children
       )}
