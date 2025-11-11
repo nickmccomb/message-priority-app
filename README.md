@@ -2,6 +2,20 @@
 
 A high-performance mobile messaging application built with React Native and Expo, designed to help users prioritize and manage messages from multiple communication platforms.
 
+## 📸 Screenshots
+
+### Messages List
+![Messages List](./screenshots/messages-list.png)
+*Main messages feed with priority-based sorting, real-time updates, and filtering options*
+
+### Filter Options
+![Filter Bottom Sheet](./screenshots/filter-bottom-sheet.png)
+*Filter bottom sheet allowing users to sort by priority, time, or both, and hide read messages*
+
+### Message Detail
+![Message Detail](./screenshots/message-detail.png)
+*Detailed message view with sender information, priority score, and full content*
+
 ## 🚀 Quick Start
 
 ### Prerequisites
