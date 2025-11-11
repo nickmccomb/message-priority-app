@@ -1,23 +1,27 @@
 import { Pressable, View } from "react-native";
+import React, { useCallback } from "react";
 
-import type { Message } from "../../types/message";
 import { MessageHeader } from "../molecules/MessageHeader";
 import { MessagePreview } from "../molecules/MessagePreview";
+import type { Message as MessageType } from "../../types/message";
 import { PriorityIndicator } from "../molecules/PriorityIndicator";
-import React from "react";
 import { SourceBadge } from "../molecules/SourceBadge";
 import { cn } from "../../utils/cn";
 
-interface MessageItemProps {
-  message: Message;
-  onPress?: (message: Message) => void;
+export interface MessageItemProps {
+  message: MessageType;
+  onPress?: (message: MessageType) => void;
   className?: string;
 }
 
-export function MessageItem({ message, onPress, className }: MessageItemProps) {
-  const handlePress = () => {
+export const MessageItem = React.memo(function MessageItem({
+  message,
+  onPress,
+  className,
+}: MessageItemProps) {
+  const handlePress = useCallback(() => {
     onPress?.(message);
-  };
+  }, [onPress, message]);
 
   return (
     <Pressable
@@ -49,4 +53,5 @@ export function MessageItem({ message, onPress, className }: MessageItemProps) {
       </View>
     </Pressable>
   );
-}
+});
+

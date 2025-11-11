@@ -5,7 +5,7 @@ import { Text } from "../atoms/Text";
 import { View } from "react-native";
 import { cn } from "../../utils/cn";
 
-interface MessageHeaderProps {
+export interface MessageHeaderProps {
   sender: string;
   timestamp: string;
   senderVIP?: boolean;

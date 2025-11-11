@@ -1,15 +1,26 @@
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
-import React, { useCallback, useLayoutEffect, useMemo } from "react";
 import { useMarkAsRead, useMessages } from "../../hooks/useMessages";
 
-import type { Message } from "../../types/message";
-import { MessageList } from "../../components/organisms/MessageList";
-import { Text } from "../../components/atoms/Text";
-import { sortMessagesByPriority } from "../../utils/priority";
-import { useMessageStore } from "../../stores/messageStore";
+import type { LegendListRenderItemProps } from "@legendapp/list";
 import { useNavigation } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { type BottomSheetRef } from "../../components/atoms/BottomSheet";
+import { ListView } from "../../components/atoms/ListView";
+import { Text } from "../../components/atoms/Text";
+import { MessageItem } from "../../components/organisms/MessageItem";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { useMessageStore } from "../../stores/messageStore";
+import type { FilterMode } from "../../types/filter";
+import type { Message as MessageType } from "../../types/message";
+import { sortMessages } from "../../utils/priority";
+import { FilterBottomSheet } from "./components/FilterBottomSheet";
 
 export function Messages() {
   const { t } = useTranslation();
@@ -17,6 +28,8 @@ export function Messages() {
   const { isLoading, isError, refetch, isRefetching } = useMessages();
   const { messages, clearMessages } = useMessageStore();
   const markAsReadMutation = useMarkAsRead();
+  const filterBottomSheetRef = useRef<BottomSheetRef>(null);
+  const [filterMode, setFilterMode] = useState<FilterMode>("both");
 
   // Connect to WebSocket for real-time updates
   useWebSocket();
@@ -25,8 +38,16 @@ export function Messages() {
   // React Query data is used to initially populate the store
   const displayMessages = useMemo(() => {
     // Zustand store is the single source of truth - it gets updated by both API and WebSocket
-    return sortMessagesByPriority(messages);
-  }, [messages]);
+    return sortMessages(messages, filterMode);
+  }, [messages, filterMode]);
+
+  const handleOpenFilter = useCallback(() => {
+    filterBottomSheetRef.current?.expand();
+  }, []);
+
+  const handleFilterModeChange = useCallback((mode: FilterMode) => {
+    setFilterMode(mode);
+  }, []);
 
   const handleClear = useCallback(() => {
     Alert.alert(
@@ -46,7 +67,7 @@ export function Messages() {
     );
   }, [clearMessages, t]);
 
-  // Configure native header with title, message count on left, and clear button on right
+  // Configure native header with title, message count on left, filter and clear buttons on right
   useLayoutEffect(() => {
     navigation.setOptions({
       title: t("messages.screen.title"),
@@ -58,60 +79,96 @@ export function Messages() {
         </View>
       ),
       headerRight: () => (
-        <Pressable
-          onPress={handleClear}
-          className="pr-4"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Text.Body className="text-blue-600 dark:text-blue-400">
-            {t("messages.screen.clear")}
-          </Text.Body>
-        </Pressable>
+        <View className="flex-row items-center gap-4 pr-4">
+          <Pressable
+            onPress={handleOpenFilter}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text.Body className="text-blue-600 dark:text-blue-400">
+              {t("messages.screen.filter")}
+            </Text.Body>
+          </Pressable>
+          <Pressable
+            onPress={handleClear}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text.Body className="text-blue-600 dark:text-blue-400">
+              {t("messages.screen.clear")}
+            </Text.Body>
+          </Pressable>
+        </View>
       ),
     });
-  }, [navigation, t, displayMessages.length, handleClear]);
+  }, [navigation, t, displayMessages.length, handleClear, handleOpenFilter]);
 
   const handleRefresh = async () => {
     await refetch();
   };
 
-  const handleMessagePress = (message: Message) => {
-    // Mark as read if unread
-    if (!message.isRead) {
-      markAsReadMutation.mutate(message.id);
-    }
-    // TODO: Navigate to message detail
-  };
+  const handleMessagePress = useCallback(
+    (message: MessageType) => {
+      // Mark as read if unread
+      if (!message.isRead) {
+        markAsReadMutation.mutate(message.id);
+      }
+      // TODO: Navigate to message detail
+    },
+    [markAsReadMutation]
+  );
+
+  // ListView configuration
+  const keyExtractor = useCallback((item: MessageType) => item.id, []);
+
+  const renderItem = useCallback(
+    ({ item }: LegendListRenderItemProps<MessageType>) => (
+      <MessageItem message={item} onPress={handleMessagePress} />
+    ),
+    [handleMessagePress]
+  );
+
+  const estimatedItemSize = useMemo(() => {
+    // Average message item height: ~120px (header + preview + badge + padding)
+    return 120;
+  }, []);
 
   return (
-    <View className="flex-1 bg-white dark:bg-gray-900">
-      {isLoading && messages.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" />
-          <Text.Body className="mt-4 text-gray-500 dark:text-gray-400">
-            {t("messages.screen.loading")}
-          </Text.Body>
-        </View>
-      ) : isError ? (
-        <View className="flex-1 items-center justify-center">
-          <Text.Body className="text-gray-500 dark:text-gray-400">
-            {t("messages.screen.error")}
-          </Text.Body>
-        </View>
-      ) : displayMessages.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <Text.Body className="text-gray-500 dark:text-gray-400">
-            {t("messages.screen.empty")}
-          </Text.Body>
-        </View>
-      ) : (
-        <MessageList
-          messages={displayMessages}
-          onMessagePress={handleMessagePress}
-          onRefresh={handleRefresh}
-          refreshing={isRefetching}
-        />
-      )}
-    </View>
+    <>
+      <View className="flex-1 bg-white dark:bg-gray-900">
+        {isLoading && messages.length === 0 ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" />
+            <Text.Body className="mt-4 text-gray-500 dark:text-gray-400">
+              {t("messages.screen.loading")}
+            </Text.Body>
+          </View>
+        ) : isError ? (
+          <View className="flex-1 items-center justify-center">
+            <Text.Body className="text-gray-500 dark:text-gray-400">
+              {t("messages.screen.error")}
+            </Text.Body>
+          </View>
+        ) : displayMessages.length === 0 ? (
+          <View className="flex-1 items-center justify-center">
+            <Text.Body className="text-gray-500 dark:text-gray-400">
+              {t("messages.screen.empty")}
+            </Text.Body>
+          </View>
+        ) : (
+          <ListView
+            data={displayMessages}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            estimatedItemSize={estimatedItemSize}
+            onRefresh={handleRefresh}
+            refreshing={isRefetching}
+          />
+        )}
+      </View>
+      <FilterBottomSheet
+        bottomSheetRef={filterBottomSheetRef}
+        currentMode={filterMode}
+        onModeChange={handleFilterModeChange}
+      />
+    </>
   );
 }

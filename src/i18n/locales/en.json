@@ -4,8 +4,17 @@
   "messages.screen.loading": "Loading messages...",
   "messages.screen.error": "Failed to load messages",
   "messages.screen.clear": "Clear",
+  "messages.screen.filter": "Filter",
   "messages.screen.clearConfirm.title": "Clear All Messages",
   "messages.screen.clearConfirm.message": "Are you sure you want to clear all messages? This action cannot be undone.",
   "messages.screen.clearConfirm.confirm": "Clear",
-  "messages.screen.clearConfirm.cancel": "Cancel"
+  "messages.screen.clearConfirm.cancel": "Cancel",
+  "messages.filter.title": "Filter Messages",
+  "messages.filter.description": "Choose how messages are sorted",
+  "messages.filter.mode.both": "Priority & Time",
+  "messages.filter.mode.both.description": "Most relevant and important messages",
+  "messages.filter.mode.priority": "Priority Only",
+  "messages.filter.mode.priority.description": "Sorted by importance score",
+  "messages.filter.mode.time": "Time Only",
+  "messages.filter.mode.time.description": "Newest messages first"
 }
