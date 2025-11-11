@@ -5,15 +5,15 @@ A high-performance mobile messaging application built with React Native and Expo
 ## 📸 Screenshots
 
 ### Messages List
-![Messages List](./screenshots/messages-list.png)
+<img width="1320" height="2868" alt="simulator_screenshot_B4699174-085A-4542-92D4-24FE225B1AA5" src="https://github.com/user-attachments/assets/6b5eea2a-eedd-4cd0-b5db-b7dffe8f559b" />
 *Main messages feed with priority-based sorting, real-time updates, and filtering options*
 
 ### Filter Options
-![Filter Bottom Sheet](./screenshots/filter-bottom-sheet.png)
+<img width="1320" height="2868" alt="simulator_screenshot_EC844C8B-9682-40E2-8F94-F808488B0A57" src="https://github.com/user-attachments/assets/091d0f1d-79d6-4933-bf3b-2303e7590ca2" />
 *Filter bottom sheet allowing users to sort by priority, time, or both, and hide read messages*
 
 ### Message Detail
-![Message Detail](./screenshots/message-detail.png)
+<img width="1320" height="2868" alt="simulator_screenshot_88EA931A-5866-4441-BCF0-1ADC344992E1" src="https://github.com/user-attachments/assets/eddcfb5e-25a6-4eac-aca8-f27b32b62537" />
 *Detailed message view with sender information, priority score, and full content*
 
 ## 🚀 Quick Start
