@@ -1,5 +1,5 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { Alert, View } from "react-native";
 import {
   useMessagesError,
   useMessagesIsRefetching,
@@ -11,8 +11,10 @@ import type { LegendListRef, LegendListRenderItemProps } from "@legendapp/list";
 import { useNavigation, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { type BottomSheetRef } from "../../components/atoms/BottomSheet";
+import { EmptyState } from "../../components/atoms/EmptyState";
+import { ErrorState } from "../../components/atoms/ErrorState";
 import { ListView } from "../../components/atoms/ListView";
-import { Text } from "../../components/atoms/Text";
+import { LoadingState } from "../../components/atoms/LoadingState";
 import { MessageItem } from "../../components/organisms/MessageItem";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useFilterStore } from "../../stores/filterStore";
@@ -131,24 +133,11 @@ export function Messages() {
     <>
       <View className="flex-1 bg-white dark:bg-gray-900">
         {isLoading && messages.length === 0 ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" />
-            <Text.Body className="mt-4 text-gray-500 dark:text-gray-400">
-              {t("messages.screen.loading")}
-            </Text.Body>
-          </View>
+          <LoadingState message={t("messages.screen.loading")} />
         ) : isError ? (
-          <View className="flex-1 items-center justify-center">
-            <Text.Body className="text-gray-500 dark:text-gray-400">
-              {t("messages.screen.error")}
-            </Text.Body>
-          </View>
+          <ErrorState message={t("messages.screen.error")} />
         ) : displayMessages.length === 0 ? (
-          <View className="flex-1 items-center justify-center">
-            <Text.Body className="text-gray-500 dark:text-gray-400">
-              {t("messages.screen.empty")}
-            </Text.Body>
-          </View>
+          <EmptyState message={t("messages.screen.empty")} />
         ) : (
           <ListView
             ref={listViewRef}

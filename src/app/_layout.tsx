@@ -21,6 +21,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       refetchOnWindowFocus: false,
+      staleTime: 30000, // 30 seconds - default for all queries
+      gcTime: 5 * 60 * 1000, // 5 minutes - default for all queries
     },
   },
 });
