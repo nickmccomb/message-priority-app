@@ -1,95 +1,299 @@
 # Message Priority App
 
-A performant mobile messaging application built with React Native, Expo, and TypeScript.
+A high-performance mobile messaging application built with React Native and Expo, designed to help users prioritize and manage messages from multiple communication platforms.
 
-## Get Started
+## 🚀 Quick Start
 
-This project uses [Bun](https://bun.sh) as its package manager.
+### Prerequisites
 
-1. Install dependencies
+- Node.js 18+ or Bun
+- iOS Simulator (for macOS) or Android Emulator
+- Expo CLI (optional, we use `bunx expo`)
 
-   ```bash
-   bun install
-   ```
-
-2. Pre-build the native projects (required for development builds)
-
-   ```bash
-   bun run prebuild
-   ```
-
-3. Start the app
-
-   ```bash
-   bun start
-   # or directly
-   bunx expo start
-   ```
-
-   Or run directly on device/simulator (after prebuild):
-
-   ```bash
-   # iOS
-   bun ios
-
-   # Android
-   bun android
-   ```
-
-## Development Builds
-
-This project uses **development builds** instead of Expo Go. You must pre-build the native projects before running.
-
-### First Time Setup
+### Installation
 
 ```bash
-# Clean prebuild (removes existing native folders first - recommended)
+# Install dependencies
+bun install
+
+# Start the development server
+bun run start
+
+# For development builds (not Expo Go)
 bun run prebuild:clean
-
-# Or generate native iOS and Android projects
-bun run prebuild
-
-# Or prebuild for specific platform
-bun run prebuild:ios
-bun run prebuild:android
+bun run ios  # or bun run android
 ```
 
-### Running on Devices
+### Troubleshooting
+
+If you encounter build issues, try:
 
 ```bash
-# iOS Simulator/Device
-bun ios
+# Fix dependency issues
+bunx expo install --fix
 
-# Android Emulator/Device
-bun android
+# Clean and rebuild
+rm -rf ios android node_modules
+bun install
+bun run prebuild:clean
 ```
 
-### Building for Production
+## 📋 Problem Decomposition
 
-```bash
-# iOS Release Build
-bun run build:ios
+### Core Challenges
 
-# Android Release Build
-bun run build:android
+1. **Message Prioritization**: Display messages sorted by relevance and importance
+2. **Real-time Updates**: Handle incoming messages via WebSocket while maintaining UI responsiveness
+3. **Offline Support**: Ensure full functionality when offline with local caching
+4. **Performance**: Smooth scrolling through large message lists (100-500 visible items)
+5. **State Management**: Coordinate data from API, WebSocket, and local storage
+6. **Cross-platform Consistency**: Maintain identical behavior on iOS and Android
+
+### Solution Approach
+
+- **Hybrid Architecture**: Combined UI/UX focus (Option A) with offline-first capabilities (Option B) and cross-platform considerations (Option C)
+- **Layered State Management**: React Query for server state, Zustand for client state, MMKV for persistence
+- **Optimistic UI**: Immediate feedback for user actions with rollback on errors
+- **Performance Optimization**: Virtualized lists, selective re-renders, and efficient data structures
+
+## 🏗️ Architecture & Design Decisions
+
+### Component Architecture
+
+Following **Atomic Design** principles:
+
+- **Atoms**: Basic building blocks (Text, Badge, Avatar, ListView, EmptyState, LoadingState, ErrorState)
+- **Molecules**: Composed atoms (MessageHeader, MessagePreview, SourceBadge)
+- **Organisms**: Complex components (MessageItem, BottomSheet)
+- **Templates**: Screen layouts
+- **Features**: Domain-specific modules (`features/messages`, `features/message-detail`)
+
+### Data Flow
+
+```
+┌─────────────┐
+│   API/WS    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐     ┌──────────────┐
+│ React Query │────▶│  Zustand     │
+│  (Server)   │     │  (Client)    │
+└─────────────┘     └──────┬───────┘
+                           │
+                           ▼
+                    ┌──────────────┐
+                    │     MMKV     │
+                    │ (Persistence)│
+                    └──────────────┘
 ```
 
-## Documentation
+### State Management Strategy
 
-See the [docs](./docs/) folder for detailed documentation:
+1. **React Query**: Handles API calls, caching, and synchronization
+   - Deduplicates requests
+   - Automatic retry logic
+   - Background refetching
 
-- [Design Document](./docs/DESIGN.md) - Architecture and design decisions
-- [Styling Guide](./docs/styling.md) - Tailwind CSS and NativeWind usage
-- [Composition Pattern](./docs/composition-pattern.md) - Component composition patterns
+2. **Zustand**: Manages client-side state
+   - Messages array (single source of truth)
+   - Filter preferences
+   - Theme preferences
+   - Optimistic updates
 
-## Project Structure
+3. **MMKV**: Ultra-fast persistence
+   - Messages cache
+   - User preferences
+   - Offline action queue (future)
+
+### Performance Optimizations
+
+1. **List Virtualization**: Using `@legendapp/list` (superior to FlatList/FlashList)
+   - Only renders visible items
+   - Efficient memory usage
+   - Smooth 60fps scrolling
+
+2. **Selective Re-renders**: React Query selectors prevent unnecessary updates
+   - Separate hooks for `isLoading`, `isError`, `refetch`, `isRefetching`
+   - Components only re-render when their specific data changes
+
+3. **Memoization**: Strategic use of `useMemo` and `useCallback`
+   - Filtered/sorted messages memoized
+   - Callback functions memoized to prevent child re-renders
+
+4. **Optimistic Updates**: Immediate UI feedback
+   - Mark as read instantly
+   - Rollback on error
+
+## 🛠️ Technology Choices
+
+### Core Framework
+
+- **React Native + Expo**: Cross-platform development with managed workflow
+  - Fast iteration with Expo Go (development)
+  - Native builds for production
+  - Access to native APIs when needed
+
+### State Management
+
+- **TanStack Query (React Query)**: Server state management
+  - Built-in caching, deduplication, and synchronization
+  - Automatic background updates
+  - Optimistic update support
+
+- **Zustand**: Client state management
+  - Lightweight (no boilerplate)
+  - TypeScript-first
+  - Easy to test
+
+- **react-native-mmkv-storage**: Persistence layer
+  - 30x faster than AsyncStorage
+  - Synchronous API
+  - Perfect for Zustand persistence
+
+### UI & Styling
+
+- **NativeWind (Tailwind CSS)**: Utility-first styling
+  - Consistent design system
+  - Dark mode support
+  - Responsive design
+
+- **@gorhom/bottom-sheet**: Native bottom sheets
+  - Smooth animations
+  - Gesture handling
+  - Platform-optimized
+
+### Performance
+
+- **@legendapp/list**: High-performance list virtualization
+  - Superior to FlatList and FlashList
+  - Better memory management
+  - Smoother scrolling
+
+### Internationalization
+
+- **i18next + react-i18next**: Translation support
+  - Flat JSON structure
+  - Type-safe translations
+  - Easy to extend
+
+## 📊 Trade-offs & Decisions
+
+### Performance vs Features
+
+- **Chosen**: Performance-first approach
+  - Virtualized lists for large datasets
+  - Selective re-renders with React Query selectors
+  - Memoization to prevent unnecessary computations
+  - **Trade-off**: Slightly more complex code, but ensures smooth UX
+
+### Native vs Cross-platform
+
+- **Chosen**: Cross-platform with React Native
+  - Single codebase for iOS and Android
+  - Expo managed workflow for faster development
+  - Native modules when needed (MMKV, bottom-sheet)
+  - **Trade-off**: Some platform-specific optimizations may be limited, but development speed and consistency outweigh this
+
+### State Management Complexity
+
+- **Chosen**: Layered approach (React Query + Zustand)
+  - React Query for server state (caching, sync)
+  - Zustand for client state (UI, preferences)
+  - **Trade-off**: More libraries to learn, but clear separation of concerns
+
+### Offline-First vs Online-First
+
+- **Chosen**: Hybrid approach
+  - Local caching with MMKV
+  - Optimistic updates
+  - Action queue for offline (future)
+  - **Trade-off**: More complex sync logic, but better UX offline
+
+### Code Organization
+
+- **Chosen**: Feature-based + Atomic Design
+  - Features grouped by domain (`features/messages`, `features/message-detail`)
+  - Components organized by complexity (atoms, molecules, organisms)
+  - **Trade-off**: More files/folders, but better maintainability and discoverability
+
+## 🎯 Key Features Implemented
+
+✅ **Message List**
+- Priority-based sorting (priority + time, priority only, time only)
+- Real-time updates via WebSocket
+- Pull-to-refresh
+- Filter read messages
+- Scroll to top
+
+✅ **Message Detail**
+- Full message content
+- Mark as read on view
+- Priority display
+- Source badges
+- Metadata display
+
+✅ **Performance**
+- Smooth scrolling (60fps)
+- Efficient memory usage
+- Optimized re-renders
+- Fast persistence
+
+✅ **Offline Support**
+- Local message cache
+- Persistent preferences
+- Optimistic UI updates
+
+✅ **User Experience**
+- Dark mode support
+- Internationalization (i18n)
+- Native bottom sheets
+- Loading/error/empty states
+
+## 📁 Project Structure
 
 ```
 src/
-├── app/              # Expo Router routes
-├── components/       # Shared UI components (atomic design)
-├── features/         # Feature modules
-├── theme/            # Theme system
-├── i18n/             # Internationalization
-└── utils/            # Utility functions
+├── app/                    # Expo Router routes
+├── components/
+│   ├── atoms/              # Basic components
+│   ├── molecules/          # Composed components
+│   └── organisms/          # Complex components
+├── features/
+│   ├── messages/           # Messages feature
+│   └── message-detail/     # Message detail feature
+├── hooks/                  # Custom React hooks
+├── stores/                 # Zustand stores
+├── types/                  # TypeScript types
+├── utils/                  # Utility functions
+└── i18n/                   # Translations
 ```
+
+## 🔄 Data Flow Example
+
+1. **Initial Load**: React Query fetches messages → Updates Zustand → Persists to MMKV
+2. **WebSocket Update**: WebSocket receives message → Updates Zustand → UI updates
+3. **User Action**: User marks as read → Optimistic update → API call → Rollback on error
+4. **Filter Change**: User changes filter → Zustand updates → Memoized list re-sorts
+
+## 🚧 Future Enhancements
+
+- [ ] Offline action queue with sync on reconnect
+- [ ] Conflict resolution for concurrent edits
+- [ ] Push notifications
+- [ ] Message search
+- [ ] Archive/delete functionality
+- [ ] Automatic translation in CI/CD
+- [ ] Unit and integration tests
+- [ ] Performance monitoring
+
+## 📝 Development Notes
+
+- Uses Bun as package manager for faster installs
+- Development builds required (not Expo Go) for native modules
+- TypeScript strict mode enabled
+- ESLint + Prettier for code quality
+
+## 📄 License
+
+Private project for Kinso Mobile Engineering Challenge
